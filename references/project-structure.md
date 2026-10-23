@@ -47,9 +47,19 @@ Label each material statement as confirmed, assumed, open, or recommended where 
 
 Use stable episode IDs and human-readable slugs. Use filenames that identify episode, artifact, version, and state where helpful, for example `EP02_script_v1.3_approved.md`. Prefer explicit status in a manifest over ambiguous names like `final-final2`. Record which script, audio, graphics, and edit versions produced each export. Keep separate editable sources and release exports.
 
-## Cross-AI use
+## Project-scoped memory
 
-The canonical guidance is plain Markdown. For another AI that supports skill bundles, copy the skill folder and use its supported discovery mechanism. For a system without skills, provide `SKILL.md` plus only the references required for the task as context/instructions. Product-specific metadata under `agents/` is optional and should be ignored outside compatible hosts. The core guidance must not depend on proprietary tool names, a specific editor, cloud drive, or a specific model.
+Write short memory files at the project root stating that this workspace uses the workflow skill and where to start (`README.md`, `project-brief.md`, `requirements.md`, `decisions.md`): `AGENTS.md` (Codex, WorkBuddy, and other AGENTS.md hosts), `CLAUDE.md` (Claude Code), and `CODEBUDDY.md` (WorkBuddy/CodeBuddy). Each host reads its own file automatically in every session launched in that workspace, so the skill loads without per-session prompting; the project README stays the human-readable entry point. Keep these files thin pointers to project files, not copies of skill guidance: the skill folder remains the source of truth and its updates propagate to every project that references it.
+
+Claude Code reads `AGENTS.md` only when no `CLAUDE.md` exists in the working directory or above it, so the initializer writes both rather than relying on a fallback. WorkBuddy accepts `AGENTS.md` and `CODEBUDDY.md`; writing both keeps project rules available whether a task runs in the project UI or in a code workspace.
+
+The bundled initializer `scripts/init_project.py [--project <path>] [--force]` is cross-platform: it copies the starter documents into the project root and writes memory blocks (between `<!-- video-learning-workflow:start -->`/`:end -->` markers) into `AGENTS.md`, `CLAUDE.md`, and `CODEBUDDY.md`, substituting the resolved skill path and preserving any existing content outside the markers. `scripts/init_project.ps1` provides the same project setup on Windows without Python. If neither script can run, copy the starter files and insert the memory blocks manually, replacing the `__SKILL_ROOT__` placeholder.
+
+## Cross-client use
+
+The canonical guidance is plain Markdown in the Agent Skills layout, which Codex, Claude Code, WorkBuddy, and other compatible clients can read. Install the same folder into each host's discovery path (`scripts/install.py --targets ...`) instead of maintaining divergent copies. If a marketplace requires extra metadata, generate a host-specific export (`scripts/export_workbuddy.py` for WorkBuddy) rather than adding non-standard fields to the canonical `SKILL.md`.
+
+For a system without skills, provide `SKILL.md` plus only the references required for the task as context/instructions. Product-specific metadata under `agents/` is optional and should be ignored outside compatible hosts. The core guidance must not depend on proprietary tool names, a specific editor, cloud drive, or a specific model.
 
 At each new AI session, point the AI to README/status, then the relevant brief, current approved baseline, linked assets, and applicable reference. Ask it to confirm the task and input versions before making changes. If the environment cannot read files or call another skill, ask for the needed excerpt or state the limitation; do not pretend it did so.
 
