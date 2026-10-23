@@ -7,7 +7,12 @@ Public listing requires registering at open.workbuddy.cn, passing developer
 qualification review, creating the skill there, submitting it for platform
 review, and publishing after approval.
 
-The Open Platform validates extra metadata such as description_zh,
+WorkBuddy rejects skill packages with more than two directory levels
+(root/subdirectory/file). The canonical skill keeps starter documents under
+assets/project-starter/; this exporter flattens them into assets/ and rewrites
+the bundled setup scripts so the uploaded package still initializes projects.
+
+The Open Platform also validates extra metadata such as description_zh,
 description_en, version, and author. Those fields do not belong in the
 canonical SKILL.md, so this script writes a separate package while leaving
 the source untouched.
@@ -26,7 +31,7 @@ import zipfile
 from pathlib import Path
 
 SKILL_NAME = "video-learning-workflow"
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 AUTHOR = "video-learning-workflow contributors"
 CATEGORY = "productivity"
 DESCRIPTION_ZH = "规划、制作、审核、版本管理并发布教育或科普视频的完整工作流，支持单条视频、系列课程和长期栏目。"
@@ -76,6 +81,8 @@ def yaml_quote(value: str) -> str:
 
 def workbuddy_skill_md(body: str, description: str) -> str:
     triggers = "\n".join(f"  - {yaml_quote(t)}" for t in TRIGGERS)
+    # The package flattens assets/project-starter/ to assets/.
+    body = body.replace("assets/project-starter/", "assets/")
     return (
         "---\n"
         f"name: {SKILL_NAME}\n"
@@ -108,6 +115,26 @@ def config_yaml(description: str) -> str:
     )
 
 
+def flatten_assets(source: Path, destination: Path) -> None:
+    """Copy starter documents to assets/<file> (no nested directory)."""
+    starter = source / "assets" / "project-starter"
+    destination.mkdir(parents=True, exist_ok=True)
+    if not starter.is_dir():
+        return
+    for item in sorted(starter.iterdir()):
+        if item.is_file():
+            shutil.copy2(item, destination / item.name)
+
+
+def rewrite_packaged_script(path: Path) -> None:
+    """Point bundled setup scripts at the flattened assets directory."""
+    text = path.read_text(encoding="utf-8")
+    text = text.replace('source / "assets" / "project-starter"', 'source / "assets"')
+    text = text.replace("assets/project-starter", "assets")
+    text = text.replace(r"assets\project-starter", "assets")
+    path.write_text(text, encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -135,7 +162,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         package = Path(tmp) / SKILL_NAME
         package.mkdir()
-        for item in ("references", "scripts", "assets"):
+
+        for item in ("references", "scripts"):
             origin = source / item
             if origin.is_dir():
                 shutil.copytree(
@@ -143,16 +171,36 @@ def main() -> int:
                     package / item,
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
                 )
+        flatten_assets(source, package / "assets")
+
         (package / "SKILL.md").write_text(
             workbuddy_skill_md(body, description), encoding="utf-8"
         )
         (package / "config.yaml").write_text(config_yaml(description), encoding="utf-8")
         readme = source / "README.md"
         if readme.is_file():
-            shutil.copy2(readme, package / "README.md")
+            text = readme.read_text(encoding="utf-8").replace(
+                "assets/project-starter/", "assets/"
+            )
+            (package / "README.md").write_text(text, encoding="utf-8")
         license_file = source / "LICENSE"
         if license_file.is_file():
             shutil.copy2(license_file, package / "LICENSE")
+
+        for script_name in ("init_project.py", "init_project.ps1"):
+            script = package / "scripts" / script_name
+            if script.is_file():
+                rewrite_packaged_script(script)
+
+        # WorkBuddy only accepts root/<one directory>/<file>.
+        for path in sorted(package.rglob("*")):
+            if path.is_file():
+                relative = path.relative_to(package)
+                if len(relative.parts) > 2:
+                    raise ValueError(
+                        "WorkBuddy package has a directory level deeper than two: "
+                        f"{relative.as_posix()}"
+                    )
 
         temp_zip = output.with_suffix(output.suffix + ".tmp")
         with zipfile.ZipFile(temp_zip, "w", zipfile.ZIP_DEFLATED) as archive:
@@ -168,7 +216,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-
-

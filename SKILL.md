@@ -4,7 +4,7 @@ description: Plan, produce, review, version, and prepare educational or science-
 license: MIT
 metadata:
   short-description: Cross-client workflow for AI-assisted educational video projects
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # Video Learning Workflow
@@ -53,13 +53,13 @@ The initializer copies the starter documents into the project root and writes (o
 
 On Windows, `scripts/init_project.ps1 [-ProjectRoot <path>] [-Force]` performs the same project initialization without Python. With `-Force`, each existing file is backed up to `<name>.bak-<timestamp>` before replacement; without it, existing files are left untouched.
 
-WorkBuddy separates local import from public distribution. Adding a ZIP through the desktop app (Skills > Add Skill > Upload Skill) installs it only for that user. To publish to the marketplace, register on the WorkBuddy Open Platform, create the skill there, submit it for review, and publish only after approval. Build that submission package with the extra metadata the Open Platform expects:
+WorkBuddy separates local import from public distribution. Adding a ZIP through the desktop app (Skills > Add Skill > Upload Skill) installs it only for that user. To publish to the marketplace, register on the WorkBuddy Open Platform, create the skill there, submit it for review, and publish only after approval. The Open Platform accepts only two directory levels (root/subdirectory/file), so the exporter flattens `assets/project-starter/` into `assets/` and rejects any deeper path. Build that submission package with the extra metadata the Open Platform expects:
 
 ```text
 python scripts/export_workbuddy.py --output <path>/video-learning-workflow-openplatform.zip
 ```
 
-If a session cannot run the setup scripts, copy `assets/project-starter/` into the project root manually and replace the `__SKILL_ROOT__` placeholder in each memory file with the resolved skill folder path.
+If a session cannot run the setup scripts, copy the starter templates into the project root manually and replace the `__SKILL_ROOT__` placeholder in each memory file with the resolved skill folder path.
 
 ## Core operating rules
 
@@ -75,7 +75,7 @@ If a session cannot run the setup scripts, copy `assets/project-starter/` into t
 
 ## Minimum useful artifacts
 
-Scale these to the project; do not create empty paperwork. A single-video project may use one brief and a compact checklist. Series/ongoing projects should have a README/status entry point, shared series rules, episode folders, decision/change records, and release records. Starter templates are in `assets/project-starter/`.
+Scale these to the project; do not create empty paperwork. A single-video project may use one brief and a compact checklist. Series/ongoing projects should have a README/status entry point, shared series rules, episode folders, decision/change records, and release records. Starter templates are in `assets/project-starter/` in the repository (flattened to `assets/` in the Open Platform export).
 
 At minimum, maintain:
 

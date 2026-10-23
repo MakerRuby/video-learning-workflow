@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- Fixed WorkBuddy Open Platform upload failure "目录层级超限": the exporter now flattens `assets/project-starter/` into `assets/` so every path is at most `root/subdirectory/file`, and fails loudly if any deeper path remains.
+- The packaged setup scripts are rewritten to read the flattened `assets/` directory, so project initialization still works from the uploaded package.
+- Canonical repository layout is unchanged; only the exported marketplace ZIP is flattened.
 ## 1.1.0
 
 - Reworked the package for the open Agent Skills layout so one canonical folder works in Codex, Claude Code, and WorkBuddy-compatible clients.

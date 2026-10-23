@@ -4,7 +4,7 @@ A portable workflow for planning, producing, reviewing, versioning, and preparin
 
 The package follows the open [Agent Skills](https://agentskills.io) layout (`SKILL.md` plus optional `references/`, `scripts/`, and `assets/`). It is not tied to Codex: the same folder works in Codex, Claude Code, and WorkBuddy-compatible environments, with small differences in installation and project-memory filenames.
 
-Current version: **1.1.0** (see [CHANGELOG.md](CHANGELOG.md)).
+Current version: **1.1.1** (see [CHANGELOG.md](CHANGELOG.md)).
 
 ## Quick start
 
@@ -34,7 +34,7 @@ Two different WorkBuddy paths exist, and they are easy to confuse:
 - **Local use only:** in the desktop app use **技能 > 添加技能 > 上传技能**. This imports the skill into *your* WorkBuddy. It does not publish it, and other users cannot see or install it.
 - **Public marketplace listing:** register and pass qualification review on the [WorkBuddy Open Platform](https://open.workbuddy.cn) (入驻 → 创建技能 → 提交审核 → 审核通过后发布). Upload the ZIP produced by `scripts/export_workbuddy.py` there, not in the desktop app. Only after platform review and publication can other users find and install it.
 
-The export script adds the Chinese/English descriptions and `config.yaml` that the Open Platform validates, without polluting the canonical `SKILL.md`.
+The export script adds the Chinese/English descriptions and `config.yaml` that the Open Platform validates, without polluting the canonical `SKILL.md`. It also flattens `assets/project-starter/` into `assets/` because the Open Platform accepts at most two directory levels (root/subdirectory/file); the canonical repository keeps the nested layout.
 
 ## What the workflow does
 
